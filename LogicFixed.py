@@ -39,7 +39,7 @@ class LogicFixed(Logic):
         table_protected = [[1, 5], [2, 6], [3, 7], [4, 8]]
         a, b, c, d = 25, 25, 25, 25
         time_inverval = [0, a*3, (a+b)*3, (a+b+c)*3]
-        period_time = traci.simulation.getTime() % 300
+        period_time = int(traci.simulation.getCurrentTime()*0.001) % 300
         need_change = [time_inverval.index(i) for i in time_inverval if i == period_time]
 
         if need_change != []:
@@ -51,13 +51,20 @@ class LogicFixed(Logic):
         # TODO: your code here
         table_prot_perm = [[1, 5], [1, 5, 2, 6], [3, 7], [3, 7, 4, 8]]
 
-        try:
-            next_index = table_prot_perm.index(current_phases) + 1
-        except ValueError:
-            next_index = 0
-        if next_index == 4:
-            next_index = 0
-        return table_prot_perm[next_index]
+        # try:
+        #     next_index = table_prot_perm.index(current_phases) + 1
+        # except ValueError:
+        #     next_index = 0
+
+        a, b, c, d = 25, 25, 25, 25
+        time_inverval = [0, a*3, (a+b)*3, (a+b+c)*3]
+        period_time = int(traci.simulation.getCurrentTime()*0.001) % 300
+        need_change = [time_inverval.index(i) for i in time_inverval if i == period_time]
+
+        if need_change != []:
+            return table_prot_perm[need_change[0]]
+        else:
+            return -1
 
     def splitNS(self, current_phases):
         # TODO: your code here

@@ -26,7 +26,7 @@ from LogicActuated import LogicActuated as Actuated
 from LogicRL import LogicRL as RL
 
 # Left turn phase policy from {protected, protected-permissive, split-protect-NS, split-protect-EW, unrestricted}
-left_policy = "protected"
+left_policy = "protected-permissive"
 # Left turn phase policy from {Fixed, Actuated, RL}. All must implement: get_phase(self, current_phases)
 logic = Actuated(left_policy)
 if not issubclass(type(logic), Logic):
@@ -149,12 +149,13 @@ def run():
     current_phase = [2, 6]  # currently green phases index
     yellow = False  # indicates whether the current phase is yellow
 
-    while traci.simulation.getTime() < N + 300:  # The +300 is to allow all vehicles (generated up to time N) to clear the network
-        vehicles = vehicle_generator(traci.simulation.getTime(), demand)
+    # The +300 is to allow all vehicles (generated up to time N) to clear the network
+    while int(traci.simulation.getCurrentTime()*0.001) < N + 300:
+        vehicles = vehicle_generator(int(traci.simulation.getCurrentTime()*0.001), demand)
         for v in vehicles:
             traci.vehicle.add(str(vehNr), v[0], typeID=v[1])
             vehNr += 1
-        if traci.simulation.getTime() - last_phase_change >= min_phase_time:
+        if int(traci.simulation.getCurrentTime()*0.001) - last_phase_change >= min_phase_time:
             if yellow:
                 next_phase = current_phase
             else:
@@ -178,7 +179,7 @@ def run():
                     yellow = False
                 else:
                     yellow = True
-                last_phase_change = traci.simulation.getTime()
+                last_phase_change = int(traci.simulation.getCurrentTime()*0.001)
         traci.simulationStep()
 
     traci.close()
