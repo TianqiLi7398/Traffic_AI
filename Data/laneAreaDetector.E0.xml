@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Fri 19 Oct 2018 02:44:11 PM CDT by SUMO gui Version 0.32.0
-<?xml version="1.0" encoding="UTF-8"?>
-
+<!-- generated on Sat Oct 20 23:50:00 2018 by Eclipse SUMO Version 1.0.1
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
 
     <input>
@@ -29,7 +27,7 @@
     </report>
 
     <traci_server>
-        <remote-port value="33479"/>
+        <remote-port value="50898"/>
     </traci_server>
 
     <gui_only>
@@ -37,10 +35,3 @@
     </gui_only>
 
 </configuration>
--->
-
-<detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/det_e2_file.xsd">
-   <interval begin="0.00" end="100.00" id="laneAreaDetector.E0" sampledSeconds="21.31" nVehEntered="2" nVehLeft="2" nVehSeen="2" meanSpeed="12.47" meanTimeLoss="1.09" meanOccupancy="0.53" maxOccupancy="2.50" meanMaxJamLengthInVehicles="0.00" meanMaxJamLengthInMeters="0.00" maxJamLengthInVehicles="0" maxJamLengthInMeters="0.00" jamLengthInVehiclesSum="0" jamLengthInMetersSum="0.00" meanHaltingDuration="0.00" maxHaltingDuration="0.00" haltingDurationSum="0.00" meanIntervalHaltingDuration="0.00" maxIntervalHaltingDuration="0.00" intervalHaltingDurationSum="0.00" startedHalts="0.00" meanVehicleNumber="0.23" maxVehicleNumber="1" />
-   <interval begin="100.00" end="134.00" id="laneAreaDetector.E0" sampledSeconds="60.24" nVehEntered="2" nVehLeft="3" nVehSeen="2" meanSpeed="7.19" meanTimeLoss="14.53" meanOccupancy="4.46" maxOccupancy="7.50" meanMaxJamLengthInVehicles="0.68" meanMaxJamLengthInMeters="3.46" maxJamLengthInVehicles="2" maxJamLengthInMeters="12.51" jamLengthInVehiclesSum="23" jamLengthInMetersSum="117.51" meanHaltingDuration="12.50" maxHaltingDuration="23.00" haltingDurationSum="25.00" meanIntervalHaltingDuration="12.50" maxIntervalHaltingDuration="23.00" intervalHaltingDurationSum="25.00" startedHalts="2.00" meanVehicleNumber="1.79" maxVehicleNumber="3" />
-</detector>
-detector>

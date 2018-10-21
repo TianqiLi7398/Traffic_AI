@@ -12,12 +12,14 @@ simple, easily readable, and easily modifiable.  It is not optimized,
 and omits many desirable features.
 """
 
-#### Libraries
+# Libraries
 # Standard library
 import random
 
 # Third-party libraries
 import numpy as np
+import h5py
+
 
 class Network(object):
 
@@ -40,9 +42,22 @@ class Network(object):
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
+        # a is in order of state,action
+
         for b, w in zip(self.biases, self.weights):
             a = sigmoid(np.dot(w, a)+b)
         return a
+
+    #####
+    # fun with RL
+
+    def get_action(self, state):
+        # return the action of the maxium Q
+        q_values = []
+        for i in range(2):
+            q_values.append(np.max(self.feedforward(state+[i])))
+        # print('Q values:', q_values)
+        return np.argmax(q_values)
 
     def SGD(self, training_data, epochs, mini_batch_size, eta,
             test_data=None):
@@ -68,9 +83,12 @@ class Network(object):
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
+                if len(mini_batch) < mini_batch_size:
+                    return
+                # print(mini_batch[0])
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
-                print("Epoch {} : {} / {}".format(j,self.evaluate(test_data),n_test));
+                print("Epoch {} : {} / {}".format(j, self.evaluate(test_data), n_test))
             else:
                 print("Epoch {} complete".format(j))
 
@@ -98,9 +116,11 @@ class Network(object):
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
+        # x = np.asarray(x)
         activation = x
-        activations = [x] # list to store all the activations, layer by layer
-        zs = [] # list to store all the z vectors, layer by layer
+        print(x.shape, x[0].shape, y.shape, y[0].shape)
+        activations = [x]  # list to store all the activations, layer by layer
+        zs = []  # list to store all the z vectors, layer by layer
         for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation)+b
             zs.append(z)
@@ -110,7 +130,7 @@ class Network(object):
         delta = self.cost_derivative(activations[-1], y) * \
             sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
-        nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+        nabla_w[-1] = np.dot(delta, np.asarray(activations[-2]).transpose())
         # Note that the variable l in the loop below is used a little
         # differently to the notation in Chapter 2 of the book.  Here,
         # l = 1 means the last layer of neurons, l = 2 is the
@@ -122,7 +142,8 @@ class Network(object):
             sp = sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
             nabla_b[-l] = delta
-            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+            # print(l, delta.shape, activations[-l-1].shape)
+            nabla_w[-l] = np.dot(delta, np.asarray(activations[-l-1]).transpose())
         return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):
@@ -139,10 +160,20 @@ class Network(object):
         \partial a for the output activations."""
         return (output_activations-y)
 
-#### Miscellaneous functions
+    def save(self, filename):
+        hf = h5py.File(filename, 'w')
+        hf.create_dataset('weight', data=self.weights)
+        hf.create_dataset('baies', data=self.biases)
+        hf.close()
+        return
+
+# Miscellaneous functions
+
+
 def sigmoid(z):
     """The sigmoid function."""
     return 1.0/(1.0+np.exp(-z))
+
 
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
