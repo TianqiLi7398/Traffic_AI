@@ -28,7 +28,7 @@ from LogicRL import LogicRL as RL
 # Left turn phase policy from {protected, protected-permissive, split-protect-NS, split-protect-EW, unrestricted}
 left_policy = "protected-permissive"
 # Left turn phase policy from {Fixed, Actuated, RL}. All must implement: get_phase(self, current_phases)
-logic = Actuated(left_policy)
+logic = RL(left_policy)
 if not issubclass(type(logic), Logic):
     raise ValueError('logic must be a sub class of Logic')
 
@@ -135,6 +135,8 @@ def set_phase(indexes):
 
 def run():
 
+    # for i in range(30):
+
     with open('State_Street_4500_South.txt', 'r') as fp:  # Load the demand file
         demand = fp.readlines()
 
@@ -173,6 +175,7 @@ def run():
 
                 # If no change is required for the current signal assignment then return -1 (instead of a list of int)
                 next_phase = logic.get_phase(current_phase)
+                # print(int(traci.simulation.getCurrentTime()*0.001), last_phase_change, next_phase)
             if next_phase != -1:  # If a phase change is required
                 current_phase = next_phase  # chosen phases index
                 if set_phase(next_phase):  # If the chosen phases are applicable (no yellow transition is required)
@@ -204,6 +207,7 @@ if __name__ == "__main__":
         sumoBinary = checkBinary('sumo')
     else:
         sumoBinary = checkBinary('sumo-gui')
+    # sumoBinary = checkBinary('sumo')
 
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs

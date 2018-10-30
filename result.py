@@ -5,10 +5,9 @@ import sys
 import os
 import optparse
 import random
-import numpy as np
 
 # Set "SUMO_HOME" as environment variable
-# os.environ["SUMO_HOME"] = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+#os.environ["SUMO_HOME"] = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 # print(os.environ["SUMO_HOME"])
 
 # we need to import python modules from the $SUMO_HOME/tools directory
@@ -25,8 +24,8 @@ from Logic import Logic
 from LogicFixed import LogicFixed as Fixed
 from LogicActuated import LogicActuated as Actuated
 from LogicRL import LogicRL as RL
-# from deep_neural import Network
-from DeepLearningPython35.network import Network
+from calculate_xml import cal_average_time
+
 
 # Left turn phase policy from {protected, protected-permissive, split-protect-NS, split-protect-EW, unrestricted}
 left_policy = "protected-permissive"
@@ -135,80 +134,19 @@ def set_phase(indexes):
         traci.trafficlights.setRedYellowGreenState("gneJ1", ''.join(next_signals))
         return True
 
-# __________________________________ this is for training DQN
-
-
-def get_state(current_phase):
-    # the state of Q function:
-    # s = (a, jamlength for all lanes): a is integer of {0,1,2,3} for 4 rings
-    getID = {0: 'S0', 1: 'S1', 2: 'S2', 3: 'S3', 4: 'S4', 5: 'W0', 7: 'W1', 8: 'W2', 9: 'W3', 10: 'W4',
-             11: 'N0', 12: 'N1', 13: 'N2', 14: 'N3', 15: 'N4', 16: 'E0', 18: 'E1', 19: 'E2', 20: 'E3', 21: 'E4'}
-    lane_jam = []
-    for i in getID:
-        lane = 'laneAreaDetector.'+getID[i]
-        lane_jam.append(traci.areal.getJamLengthVehicle(lane))
-    table_prot_perm = [[1, 5], [1, 5, 2, 6], [3, 7], [3, 7, 4, 8]]
-    try:
-        light_info = [table_prot_perm.index(current_phase)]
-    except:
-        light_info = [0]
-    return light_info+lane_jam
-    # # tranform to a matrix
-    # state = np.zeros((22, 1))
-    #
-    # for i in range(22):
-    #     state[i] = total_state[i]
-    # return state
-
-
-def act_lights(action, current_phase):
-    # action from the NN is 0 & 1, where 1 is move to next ring, 0 is stay current light
-    if action == 0:
-        return -1
-    elif action == 1:
-        table_prot_perm = [[1, 5], [1, 5, 2, 6], [3, 7], [3, 7, 4, 8]]
-        try:
-            next_index = (table_prot_perm.index(current_phase) + 1) % 4
-        except:
-            next_index = 0
-        return table_prot_perm[next_index]
-
-
-def get_reward(cur_state, next_state):
-    # The reward will be the difference of all jamped Vehicles
-    cur_jam = sum(cur_state[:-1])
-    next_jam = sum(next_state[:-1])
-    return cur_jam - next_jam
-
-
-def transform(cur_state, action, Q):
-    x = cur_state + [action]
-    x_, y_ = np.zeros((22, 1)), np.zeros((1, 1))
-    for i in range(22):
-        x_[i] = x[i]
-    y_[0] = Q
-    return (x_, y_)
-
 
 def run():
-    # initialize Q, theta, ect
-    import time
 
-    actions = [1, 0]  # ['change', 'stay']
-    Memory = []  # will be tuple of (x,y) ,x is state, y is Q value
+    # list = np.linspace(1000, 13000, 13)
+    # list = [7000]
+    total_time = []
+    num = []
 
-    dql = Network([22, 60, 41, 1])  # a four layer network, with last layer is output
-    Q = 0  # Q value
-    epochs = 30
-    simu_steps = 0
-    N = 3*300
-    somtthing = (N + 300)/3 - 1
-    num_epoch = 0
-
-    for M in range(epochs):
+    for i in range(30):
 
         traci.start([sumoBinary, "-c", "Data/State_Street_4500_South.sumocfg", "--tripinfo-output",
-                     "tripinfo.xml"])  # ,  "--time-to-teleport -1"
+                     "tripinfo.xml"])
+
         with open('State_Street_4500_South.txt', 'r') as fp:  # Load the demand file
             demand = fp.readlines()
 
@@ -217,22 +155,14 @@ def run():
 
         vehNr = 0  # Vehicles dynamic count
         # N = 57600  # number of time steps (seconds) total 16 hours
-        # N = 30*300  # number of time steps (seconds) total 16 hours
+        N = 30*300  # number of time steps (seconds) total 16 hours
 
         last_phase_change = 0  # The last time the signals have changed
         current_phase = [2, 6]  # currently green phases index
         yellow = False  # indicates whether the current phase is yellow
-        num_epoch += 1
-        print('start training (%d)th eposide' % num_epoch)
-        start_time = time.time()
 
         # The +300 is to allow all vehicles (generated up to time N) to clear the network
         while int(traci.simulation.getCurrentTime()*0.001) < N + 300:
-            cur_state = get_state(current_phase)
-            # print('cur_state:', cur_state)
-
-            traci.simulationStep()
-
             vehicles = vehicle_generator(int(traci.simulation.getCurrentTime()*0.001), demand)
             for v in vehicles:
                 traci.vehicle.add(str(vehNr), v[0], typeID=v[1])
@@ -241,11 +171,21 @@ def run():
                 if yellow:
                     next_phase = current_phase
                 else:
-                    # get pi*(s)
-                    action = dql.get_action(cur_state)
-                    # print('~~~~actions', action)
-                    next_phase = act_lights(action, current_phase)  # dql.act(current_phase)
-                # print("!!!!!!!!!!!!", next_phase)
+                    # Logic for picking the next phase
+                    # Next phase is a list of int representing the phases that should be assigned green next according to:
+                    #  6: Through, Right. Westbound
+                    #  2: Through, Right. Eastbound
+                    #  8: Through, Right. Northbound
+                    #  4: Through, Right. Southbound
+
+                    #  1: Left. Westbound
+                    #  5: Left. Eastbound
+                    #  3: Left. Northbound
+                    #  7: Left. Southbound
+
+                    # If no change is required for the current signal assignment then return -1 (instead of a list of int)
+                    next_phase = logic.get_phase(current_phase)
+                    # print(int(traci.simulation.getCurrentTime()*0.001), last_phase_change, next_phase)
                 if next_phase != -1:  # If a phase change is required
                     current_phase = next_phase  # chosen phases index
                     if set_phase(next_phase):  # If the chosen phases are applicable (no yellow transition is required)
@@ -253,37 +193,16 @@ def run():
                     else:
                         yellow = True
                     last_phase_change = int(traci.simulation.getCurrentTime()*0.001)
+            traci.simulationStep()
 
-                # wait for next state
-
-                traci.simulationStep()
-                next_state = get_state(next_phase)
-                reward = get_reward(cur_state, next_state)
-                NextQ = []
-
-                if simu_steps < somtthing:  # TODO:
-                    for i in range(2):
-                        NextQ.append(np.argmax(dql.feedforward(next_state+[i])))
-                    Q += reward + gamma * max(NextQ)
-                else:
-                    Q += reward
-                # transform the data into matrix form
-                Memory.append(transform(cur_state, action, Q))  # mini_batch data for (x,y)
-
-                state = next_state
-                simu_steps += 1
-                dql.SGD(Memory, epochs=30, mini_batch_size=10, eta=0.1, test_data=None)
-
-        # traci.close()
-        print(Memory)
-        # dql.SGD(Memory, epochs=30, mini_batch_size=10, eta=0.1, test_data=None)
+        traci.close()
         sys.stdout.flush()
-        print('----------------(%d)th eposide ends, training time (%f)' %
-              (num_epoch, time.time() - start_time))
-        if num_epoch % 10 == 0:
-            print('shoud save here for (%d)th training', num_epoch)
-        #     dql.save('./dql_train/nerons_(%d).h5' % num_epoch)
-    traci.close()
+        time_, num_ = cal_average_time()
+        # total_time += time_
+        # num += num_
+        total_time.append(time_)
+        num.append(num_)
+    print('total_time:', total_time, ', NUM = ', num)
 
 
 def get_options():
@@ -297,14 +216,14 @@ def get_options():
 # this is the main entry point of this script
 if __name__ == "__main__":
     options = get_options()
-    gamma = 0.3
+
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
+    if options.nogui:
+        sumoBinary = checkBinary('sumo')
+    else:
+        sumoBinary = checkBinary('sumo-gui')
     sumoBinary = checkBinary('sumo')
-    # if options.nogui:
-    #     sumoBinary = checkBinary('sumo')
-    # else:
-    #     sumoBinary = checkBinary('sumo-gui')
 
     # this is the normal way of using traci. sumo is started as a
     # subprocess and then the python script connects and runs

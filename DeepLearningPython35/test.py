@@ -29,7 +29,7 @@ import network
 '''
 import network
 # net = network.Network([784, 30, 10])
-net = network.Network([784, 60, 41,  10])
+net = network.Network([785, 60, 41,  10])
 net.SGD(training_data, 30, 10, 3.0, test_data=test_data)
 
 

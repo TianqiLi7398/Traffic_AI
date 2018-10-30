@@ -45,7 +45,10 @@ class Network(object):
         # a is in order of state,action
 
         for b, w in zip(self.biases, self.weights):
+            # print(a.shape, w.shape)
+
             a = sigmoid(np.dot(w, a)+b)
+
         return a
 
     #####
@@ -55,7 +58,7 @@ class Network(object):
         # return the action of the maxium Q
         q_values = []
         for i in range(2):
-            q_values.append(np.max(self.feedforward(state+[i])))
+            q_values.append(np.max(self.feedforward(state+[i, 1])))
         # print('Q values:', q_values)
         return np.argmax(q_values)
 
@@ -83,6 +86,8 @@ class Network(object):
                 training_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
+                ############
+                # because DQL starts with 0 train data, so we don't train at start
                 if len(mini_batch) < mini_batch_size:
                     return
                 # print(mini_batch[0])
@@ -90,7 +95,8 @@ class Network(object):
             if test_data:
                 print("Epoch {} : {} / {}".format(j, self.evaluate(test_data), n_test))
             else:
-                print("Epoch {} complete".format(j))
+                # print("Epoch {} complete".format(j))
+                pass
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -118,7 +124,7 @@ class Network(object):
         # feedforward
         # x = np.asarray(x)
         activation = x
-        print(x.shape, x[0].shape, y.shape, y[0].shape)
+        # print(x.shape, x[0].shape, y.shape, y[0].shape)
         activations = [x]  # list to store all the activations, layer by layer
         zs = []  # list to store all the z vectors, layer by layer
         for b, w in zip(self.biases, self.weights):
@@ -160,11 +166,20 @@ class Network(object):
         \partial a for the output activations."""
         return (output_activations-y)
 
-    def save(self, filename):
-        hf = h5py.File(filename, 'w')
-        hf.create_dataset('weight', data=self.weights)
-        hf.create_dataset('baies', data=self.biases)
-        hf.close()
+    def save(self, num_epoch):
+        # hf = h5py.File(filename, 'w')
+        # hf.create_dataset('weight', data=self.weights)
+        # hf.create_dataset('baies', data=self.biases)
+        # hf.close()
+        # np.save('./dql_train/nerons_weight_%d.npy' % num_epoch, self.weights)
+        # np.save('./dql_train/nerons_bias_%d.npy' % num_epoch, self.biases)
+        np.save('./neuron/weight_%d.npy' % num_epoch, self.weights)
+        np.save('./neuron/bias_%d.npy' % num_epoch, self.biases)
+        return
+
+    def load(self, filename1, filename2):
+        self.weights = np.load(filename1)
+        self.biases = np.load(filename2)
         return
 
 # Miscellaneous functions
