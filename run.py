@@ -12,10 +12,13 @@ import random
 
 # we need to import python modules from the $SUMO_HOME/tools directory
 if 'SUMO_HOME' in os.environ:
-    tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
-    sys.path.append(tools)
+    tools = os.path.join(
+        os.environ['SUMO_HOME'], 'tools')
+    sys.path.append(
+        tools)
 else:
-    sys.exit("please declare environment variable 'SUMO_HOME'")
+    sys.exit(
+        "please declare environment variable 'SUMO_HOME'")
 import traci  # noqa
 from sumolib import checkBinary  # noqa
 
@@ -28,21 +31,27 @@ from LogicRL import LogicRL as RL
 # Left turn phase policy from {protected, protected-permissive, split-protect-NS, split-protect-EW, unrestricted}
 left_policy = "protected-permissive"
 # Left turn phase policy from {Fixed, Actuated, RL}. All must implement: get_phase(self, current_phases)
-logic = RL(left_policy)
+logic = RL(
+    left_policy)
+
 if not issubclass(type(logic), Logic):
-    raise ValueError('logic must be a sub class of Logic')
+    raise ValueError(
+        'logic must be a sub class of Logic')
 
 # The time interval (seconds) for each line of data in the demand file. 5 minutes in UTDOT logs (https://udottraffic.utah.gov/ATSPM)
 data_interval = 300
-right_on_red = True  # Do we allow vehicles to turn right on red
-min_phase_time = 3  # the minimal time interval between signal change (including yellow phase)
+# Do we allow vehicles to turn right on red
+right_on_red = True
+# the minimal time interval between signal change (including yellow phase)
+min_phase_time = 3
 
 
 # time in seconds and demand as a list of entries from the demand file "State_Street_4500_South.txt"
 def vehicle_generator(time, demand):
 
     # Indexes for demand file
-    iEL = 2  # Index for Eastbound turning left...
+    # Index for Eastbound turning left...
+    iEL = 2
     iET = 3
     iETR = 4
 
@@ -58,22 +67,27 @@ def vehicle_generator(time, demand):
     iST = 15
     iSR = 16
 
-    indexes = [iEL, iET, iETR, iWL, iWT, iWTR, iNL, iNT, iNR, iSL, iST, iSR]
+    indexes = [iEL, iET, iETR, iWL, iWT,
+               iWTR, iNL, iNT, iNR, iSL, iST, iSR]
     routes = ["Eastbound.L", "Eastbound.T", "Eastbound.TR", "Westbound.L", "Westbound.T", "Westbound.TR",
               "Northbound.L", "Northbound.T", "Northbound.R", "Southbound.L", "Southbound.T", "Southbound.R"]
 
     # The data entry for the current time interval is retrieved
-    data = demand[int(time/data_interval)].split()
+    data = demand[int(
+        time/data_interval)].split()
     probabilities = []
 
     vehicles = []
     for x in range(len(indexes)):
         # The probability of generating a vehicle per time step for each route
-        p = float(data[indexes[x]]) / data_interval
+        p = float(
+            data[indexes[x]]) / data_interval
         # in the current time interval
         if random.uniform(0, 1) < p:
-            vehicle = [routes[x], "passenger"]
-            vehicles.append(vehicle)
+            vehicle = [
+                routes[x], "passenger"]
+            vehicles.append(
+                vehicle)
     return vehicles
 
 
@@ -91,18 +105,37 @@ def set_phase(indexes):
     # phases.insert(5,[20,21])  # phase Left. Eastbound
     # phases.insert(3,[15])  # phase Left. Northbound
     # phases.insert(7,[4])  # phase Left. Southbound
-    phases.insert(0, [])
-    phases.insert(1, [9, 10])  # phase Left. Westbound
-    phases.insert(2, [16, 17, 18, 19])  # phase Through, Right. Eastbound
-    phases.insert(3, [15])  # phase Left. Northbound
-    phases.insert(4, [0, 1, 2, 3])  # phase Through, Right. Southbound
-    phases.insert(5, [20, 21])  # phase Left. Eastbound
-    phases.insert(6, [5, 6, 7, 8])  # phase Through, Right. Westbound
-    phases.insert(7, [4])  # phase Left. Southbound
-    phases.insert(8, [11, 12, 13, 14])  # phase Through, Right. Northbound
+    phases.insert(
+        0, [])
+    # phase Left. Westbound
+    phases.insert(
+        1, [9, 10])
+    # phase Through, Right. Eastbound
+    phases.insert(
+        2, [16, 17, 18, 19])
+    # phase Left. Northbound
+    phases.insert(
+        3, [15])
+    # phase Through, Right. Southbound
+    phases.insert(
+        4, [0, 1, 2, 3])
+    # phase Left. Eastbound
+    phases.insert(
+        5, [20, 21])
+    # phase Through, Right. Westbound
+    phases.insert(
+        6, [5, 6, 7, 8])
+    # phase Left. Southbound
+    phases.insert(
+        7, [4])
+    # phase Through, Right. Northbound
+    phases.insert(
+        8, [11, 12, 13, 14])
 
-    right_turns = [0, 5, 11, 16]
-    next_signals = list("rrrrrrrrrrrrrrrrrrrrrr")  # init signals
+    right_turns = [
+        0, 5, 11, 16]
+    next_signals = list(
+        "rrrrrrrrrrrrrrrrrrrrrr")  # init signals
 
     if right_on_red:
         for x in right_turns:
@@ -117,7 +150,8 @@ def set_phase(indexes):
         "gneJ1"))  # get the currently assigned lights
     yellow_phase = False
     for x in range(len(current_signals)):
-        if current_signals[x] == 'G' and next_signals[x] == 'r':  # Check if a yellow phase is needed
+        # Check if a yellow phase is needed
+        if current_signals[x] == 'G' and next_signals[x] == 'r':
             yellow_phase = True
 
     if yellow_phase:
@@ -126,10 +160,12 @@ def set_phase(indexes):
             if current_signals[x] == 'G' and next_signals[x] == 'r':
                                                                    # should be assigned yellow
                 current_signals[x] = 'y'
-        traci.trafficlights.setRedYellowGreenState("gneJ1", ''.join(current_signals))
+        traci.trafficlights.setRedYellowGreenState(
+            "gneJ1", ''.join(current_signals))
         return False
     else:
-        traci.trafficlights.setRedYellowGreenState("gneJ1", ''.join(next_signals))
+        traci.trafficlights.setRedYellowGreenState(
+            "gneJ1", ''.join(next_signals))
         return True
 
 
@@ -137,25 +173,38 @@ def run():
 
     # for i in range(30):
 
-    with open('State_Street_4500_South.txt', 'r') as fp:  # Load the demand file
+    # Load the demand file
+    with open('State_Street_4500_South.txt', 'r') as fp:
         demand = fp.readlines()
 
-    demand.pop(0)
-    demand.pop(0)  # The two first entries are the file header, depose them
+    demand.pop(
+        0)
+    # The two first entries are the file header, depose them
+    demand.pop(
+        0)
 
-    vehNr = 0  # Vehicles dynamic count
+    # Vehicles dynamic count
+    vehNr = 0
     # N = 57600  # number of time steps (seconds) total 16 hours
-    N = 30*300  # number of time steps (seconds) total 16 hours
+    # number of time steps (seconds) total 16 hours
+    N = 30 * \
+        300
 
-    last_phase_change = 0  # The last time the signals have changed
-    current_phase = [2, 6]  # currently green phases index
-    yellow = False  # indicates whether the current phase is yellow
+    # The last time the signals have changed
+    last_phase_change = 0
+    # currently green phases index
+    current_phase = [
+        2, 6]
+    # indicates whether the current phase is yellow
+    yellow = False
 
     # The +300 is to allow all vehicles (generated up to time N) to clear the network
     while int(traci.simulation.getCurrentTime()*0.001) < N + 300:
-        vehicles = vehicle_generator(int(traci.simulation.getCurrentTime()*0.001), demand)
+        vehicles = vehicle_generator(int(
+            traci.simulation.getCurrentTime()*0.001), demand)
         for v in vehicles:
-            traci.vehicle.add(str(vehNr), v[0], typeID=v[1])
+            traci.vehicle.add(str(
+                vehNr), v[0], typeID=v[1])
             vehNr += 1
         if int(traci.simulation.getCurrentTime()*0.001) - last_phase_change >= min_phase_time:
             if yellow:
@@ -174,15 +223,25 @@ def run():
                 #  7: Left. Southbound
 
                 # If no change is required for the current signal assignment then return -1 (instead of a list of int)
-                next_phase = logic.get_phase(current_phase)
+                next_phase = logic.get_phase(
+                    current_phase)
+
+                if next_phase == -1:
+                    next_phase = current_phase
+
                 # print(int(traci.simulation.getCurrentTime()*0.001), last_phase_change, next_phase)
             if next_phase != -1:  # If a phase change is required
-                current_phase = next_phase  # chosen phases index
-                if set_phase(next_phase):  # If the chosen phases are applicable (no yellow transition is required)
+                # chosen phases index
+                current_phase = next_phase
+                print(int(
+                    traci.simulation.getCurrentTime()*0.001), next_phase)
+                # If the chosen phases are applicable (no yellow transition is required)
+                if set_phase(next_phase):
                     yellow = False
                 else:
                     yellow = True
-                last_phase_change = int(traci.simulation.getCurrentTime()*0.001)
+                last_phase_change = int(
+                    traci.simulation.getCurrentTime()*0.001)
         traci.simulationStep()
 
     traci.close()
@@ -204,9 +263,11 @@ if __name__ == "__main__":
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
     if options.nogui:
-        sumoBinary = checkBinary('sumo')
+        sumoBinary = checkBinary(
+            'sumo')
     else:
-        sumoBinary = checkBinary('sumo-gui')
+        sumoBinary = checkBinary(
+            'sumo-gui')
     # sumoBinary = checkBinary('sumo')
 
     # this is the normal way of using traci. sumo is started as a

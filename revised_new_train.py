@@ -29,7 +29,7 @@ from LogicFixed import LogicFixed as Fixed
 from LogicActuated import LogicActuated as Actuated
 from LogicRL import LogicRL as RL
 # from deep_neural import Network
-from DeepLearningPython35.network import Network
+from DeepLearningPython35.q_learning_network import Network
 
 # Left turn phase policy from {protected, protected-permissive, split-protect-NS, split-protect-EW, unrestricted}
 left_policy = "protected-permissive"
@@ -222,8 +222,8 @@ def get_reward(cur_state, next_state):
     # The reward will be the difference of all jamped Vehicles
     # cur_jam = sum(cur_state[:-1])
     # next_jam = sum(next_state[:-1])
-    # return cur_jam - next_jam
-    return -sum(cur_state) + sum(next_state)
+    # return -cur_speed + next_speed
+    return sum(cur_state) - sum(next_state)
 
 
 def transform(cur_state, action, Q):
@@ -236,6 +236,16 @@ def transform(cur_state, action, Q):
 
     y_[0] = Q
     return (x_, y_)
+
+
+def transform_revise(cur_state, action, reward, next_state):
+    x_ = np.ones(
+        (23, 1))
+    x = cur_state + \
+        [action]
+    for i in range(21):
+        x_[i] = x[i]
+    return (x_, reward, next_state)
 
 
 def transform_x(cur_state, action):
@@ -262,7 +272,7 @@ def run():
 
     # a 3-layer network, with last layer is output
     dql = Network(
-        [23, 50, 1])
+        [23, 50, 1], gamma)
     # Q value
     Q = 0
     epochs = 200
@@ -331,32 +341,32 @@ def run():
                 NextQ = []
                 simu_steps += 1
                 # print(simu_steps)
-                if simu_steps % 1000 == 0:
+                if simu_steps % 500 == 0:
                     print(
                         'shoud save here for %dth training', simu_steps)
                     dql.save(
-                        simu_steps)
+                        simu_steps, path='./new_neuron/')
 
                 if simu_steps == end_point:
                     break
                 # Q learning !!!!!!!!!!!!!!!!
                 # TODO:
-                if simu_steps < int(traci.simulation.getCurrentTime()*0.001) - 1:
-                    for i in range(2):
-                        NextQ.append(np.max(
-                            dql.feedforward(next_state + [i, 1])))
-                    Q = reward + \
-                        gamma * \
-                        max(
-                            NextQ)
-                else:
-                    Q = reward
+                # if simu_steps < int(traci.simulation.getCurrentTime()*0.001) - 1:
+                #     for i in range(2):
+                #         NextQ.append(np.max(
+                #             dql.feedforward(next_state + [i, 1])))
+                #     Q = reward + \
+                #         gamma * \
+                #         max(
+                #             NextQ)
+                # else:
+                #     Q = reward
 
                 # replay!!!!!!!!
                 if simu_steps % 3000 != 0:
                     # mini_batch data for (x,y)
-                    Memory.append(transform(
-                        cur_state, action, Q))
+                    Memory.append(transform_revise(
+                        cur_state, action, reward, next_state))
                     dql.SGD(
                         Memory, epochs=30, mini_batch_size=10, eta=0.5, test_data=None)
                 # update cur_state
@@ -369,40 +379,17 @@ def run():
                     action = 0
                 else:
 
-                    # # action = dql.get_action(cur_state)
-                    # # next_phase = act_lights(action, current_phase)  # dql.act(current_phase)
-                    # next_state = get_state(current_phase)
-                    # reward = get_reward(cur_state, next_state)
-                    # NextQ = []
-                    # simu_steps += 1
-                    # print(simu_steps)
-                    # # Q learning !!!!!!!!!!!!!!!!
-                    # if simu_steps < somtthing:  # TODO:
-                    #     for i in range(2):
-                    #         NextQ.append(np.argmax(dql.feedforward(next_state+[i])))
-                    #     Q += reward + gamma * max(NextQ)
-                    # else:
-                    #     Q += reward
-                    #
-                    # # replay!!!!!!!!
-                    # Memory.append(transform(cur_state, action, Q))  # mini_batch data for (x,y)
-                    # dql.SGD(Memory, epochs=1, mini_batch_size=100, eta=0.1, test_data=None)
-                    # # update cur_state
-                    # cur_state = next_state
-                    # # make decision based on replay model
-
-                    #
                     action = dql.get_action(
                         cur_state)
                     next_phase = act_lights(
                         action, current_phase)  # dql.act(current_phase
-                    if next_phase == -1:
-                        next_phase = current_phase
+
+                if next_phase == -1:
+                    next_phase = current_phase
 
                 if next_phase != -1:  # If a phase change is required
                     # chosen phases index
                     current_phase = next_phase
-
                     # If the chosen phases are applicable (no yellow transition is required)
                     if set_phase(next_phase):
                         yellow = False
@@ -414,6 +401,8 @@ def run():
                 # wait for next state
 
             traci.simulationStep()
+            print(
+                simu_steps)
             # print('shoud save here for %dth episode', M)
             # dql.save(M)
             # next_state = get_state(next_phase)
@@ -440,7 +429,7 @@ def run():
         print(
             'shoud save here for %dth episode', M)
         dql.save(
-            M)
+            M, path='./new_neuron/')
         sys.stdout.flush()
         # print('----------------(%d)th eposide ends, training time (%f)' %
         #       (num_epoch, time.time() - start_time))
@@ -465,7 +454,7 @@ if __name__ == "__main__":
     # this script has been called from the command line. It will start sumo as a
     # server, then connect and run
     sumoBinary = checkBinary(
-        'sumo-gui')
+        'sumo')
     # if options.nogui:
     #     sumoBinary = checkBinary('sumo')
     # else:

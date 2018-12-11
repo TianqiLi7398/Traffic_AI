@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on Mon Oct 29 22:32:18 2018 by SUMO Version 0.32.0
+<!-- generated on Mon 10 Dec 2018 06:18:52 PM CST by SUMO gui Version 0.32.0
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/sumoConfiguration.xsd">
@@ -29,7 +29,7 @@
     </report>
 
     <traci_server>
-        <remote-port value="45535"/>
+        <remote-port value="51073"/>
     </traci_server>
 
     <gui_only>
@@ -40,15 +40,5 @@
 -->
 
 <detector xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/det_e1_file.xsd">
-    <interval begin="0.00" end="900.00" id="inductionLoop.W0" nVehContrib="47" flow="188.00" occupancy="2.13" speed="12.83" length="5.00" nVehEntered="47"/>
-    <interval begin="900.00" end="1800.00" id="inductionLoop.W0" nVehContrib="51" flow="204.00" occupancy="2.41" speed="12.36" length="5.00" nVehEntered="51"/>
-    <interval begin="1800.00" end="2700.00" id="inductionLoop.W0" nVehContrib="58" flow="232.00" occupancy="2.72" speed="12.45" length="5.00" nVehEntered="58"/>
-    <interval begin="2700.00" end="3600.00" id="inductionLoop.W0" nVehContrib="60" flow="240.00" occupancy="2.99" speed="12.23" length="5.00" nVehEntered="60"/>
-    <interval begin="3600.00" end="4500.00" id="inductionLoop.W0" nVehContrib="57" flow="228.00" occupancy="2.82" speed="12.00" length="5.00" nVehEntered="58"/>
-    <interval begin="4500.00" end="5400.00" id="inductionLoop.W0" nVehContrib="69" flow="276.00" occupancy="3.42" speed="12.04" length="5.00" nVehEntered="69"/>
-    <interval begin="5400.00" end="6300.00" id="inductionLoop.W0" nVehContrib="64" flow="256.00" occupancy="3.41" speed="11.61" length="5.00" nVehEntered="64"/>
-    <interval begin="6300.00" end="7200.00" id="inductionLoop.W0" nVehContrib="65" flow="260.00" occupancy="3.44" speed="11.75" length="5.00" nVehEntered="65"/>
-    <interval begin="7200.00" end="8100.00" id="inductionLoop.W0" nVehContrib="68" flow="272.00" occupancy="3.76" speed="11.25" length="5.00" nVehEntered="68"/>
-    <interval begin="8100.00" end="9000.00" id="inductionLoop.W0" nVehContrib="69" flow="276.00" occupancy="4.20" speed="10.51" length="5.00" nVehEntered="70"/>
-    <interval begin="9000.00" end="9301.00" id="inductionLoop.W0" nVehContrib="32" flow="382.72" occupancy="4.68" speed="12.37" length="5.00" nVehEntered="32"/>
+    <interval begin="0.00" end="462.00" id="inductionLoop.W0" nVehContrib="26" flow="202.60" occupancy="2.06" speed="13.65" length="5.00" nVehEntered="26"/>
 </detector>
